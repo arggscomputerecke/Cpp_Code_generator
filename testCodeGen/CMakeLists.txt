@@ -15,7 +15,7 @@ include_directories(${Qt5Test_INCLUDE_DIRS})
 include_directories(include/)
 include_directories(../libCodeGen/include/)
 
-target_link_libraries(codegend_tests ${EXTERNAL_LIB_QT}  ${libCodeGen})
+target_link_libraries(codegend_tests ${EXTERNAL_LIB_QT}  libCodeGen)
 
 
 INSTALL(TARGETS codegend_tests  
