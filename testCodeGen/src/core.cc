@@ -15,6 +15,7 @@
 #include "code_gen/CHeaderFunction.hh"
 #include "code_gen/CTemplateFunction.hh"
 #include "code_gen/CHeaderStatement.hh"
+#include "code_gen/CConstructor.hh"
 
 void test_class_gen::test_constructor()
 {
@@ -70,7 +71,7 @@ void test_class_gen::function_with_namespace()
 {
   auto myFunc = CFunction("int", "myFunc", { { "int", "myInt" },{ "std::string" , "myString" } })
     .addStatement("return 1;");
-    myFunc.add_environment(CEnvironment("myNamespace", namespace_t));
+    myFunc.add_environment(CEnvironment("myNamespace", namespace_e));
   std::stringstream ss;
   myFunc.getDefinition(ss);
   auto s = ss.str();
@@ -97,6 +98,24 @@ void test_class_gen::namespace_with_function()
   myNamespace.getDeclaration(ss);
   auto s = ss.str();
   QCOMPARE(ss.str(), std::string("namespace myNamespace{\n  void  myFunc();\n} // end namespace: myNamespace\n"));
+}
+
+void test_class_gen::class_with_constructor()
+{
+  //auto cl1 = CClass("myClass").add(CConstructor({ {"typename","T"} }));  // this seems to be a bug that this sintax does not work
+
+
+  auto cl = CClass("myClass")
+    << (CConstructor({ std::make_pair("int","myInt") })
+    .addMemberInitializers("m_test(myInt)")
+    .addMemberInitializers("m_t2(42)")
+    .addStatement("int i = 43;")
+    << inline_t);
+
+  std::stringstream ss;
+  cl.getDeclaration(ss);
+  auto s = ss.str();
+  QCOMPARE(ss.str(), std::string("class myClass{\n    myClass( int  myInt) : m_test(myInt), m_t2(42){\n    int i = 43;\n  }\n} // end class: myClass\n"));
 }
 
 void test_class_gen::headerStatements()
@@ -127,32 +146,33 @@ void test_class_gen::signal_create_function()
 
   auto metaObject = QPushButton::staticMetaObject;
 
+  std::string QClassName = metaObject.className();
   std::string className = "Signals_";
-  className += metaObject.className();
+  className += QClassName;
 
   auto cl = CClass(className);
 
-  cl.add(CHeaderStatement("public:"));
-  cl.add(CHeaderStatement(className + "(" + std::string(metaObject.className()) +"* obj) :m_object(obj) {}"));
+  cl.add(CPublic());
+  cl.add(CHeaderStatement(className + "(" + QClassName +"* obj) :m_object(obj) {}"));
   for (int i = 0; i < metaObject.methodCount(); i++) {
     auto method = metaObject.method(i);
 
     if (method.methodType() == QMetaMethod::Signal) {
      auto methode_name = std::string(method.name());
-      std::string statement__ = "return make_signal_slot(m_object, &" + std::string(metaObject.className()) + "::" + methode_name+ ");";
+      std::string statement__ = "return make_signal_slot(m_object, &" + QClassName + "::" + methode_name+ ");";
       auto CF = CHeaderFunction("auto", methode_name, {}).addStatement(statement__);
       cl.add(CF);
     }
   }
 
   cl.add(CHeaderStatement("private:"))
-    .add(CHeaderStatement(std::string(metaObject.className()) + "* m_object;"));
+    .add(CHeaderStatement(QClassName + "* m_object;"));
   std::ofstream out("test.cc");
   cl.getDeclaration(out);
 
 
-  auto fun = CHeaderFunction(className, "_singals", { { std::string(metaObject.className()) + "*","obj" } })
-    .addStatement(std::string("return ") + className + "(obj);");
+  auto fun = CFunction(className, "_singals", { { QClassName + "*","obj" } })
+    .addStatement(std::string("return ") + className + "(obj);") << inline_t;
   
   fun.getDeclaration(out);
 

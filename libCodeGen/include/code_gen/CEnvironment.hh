@@ -4,9 +4,9 @@
 
 
 enum env_type {
-  class_t,
-  namespace_t,
-  Funct_t
+  class_e,
+  namespace_e,
+  Funct_e
 };
 class CEnvironment {
 public:

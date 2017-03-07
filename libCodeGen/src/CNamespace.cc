@@ -2,7 +2,7 @@
 
 CNamespace::CNamespace(const std::string& name):CNode(name)
 {
-  m_env.push_back(CEnvironment(name, namespace_t));
+  m_env.push_back(CEnvironment(name, namespace_e));
 }
 
 CNamespace::CNamespace(const CNamespace& nameSpace_):CNode(nameSpace_)

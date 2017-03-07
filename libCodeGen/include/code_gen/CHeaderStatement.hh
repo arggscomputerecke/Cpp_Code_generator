@@ -14,4 +14,7 @@ public:
   virtual std::unique_ptr<CNode> copy() const override;
 
 };
+auto CPublic() {
+  return CHeaderStatement("public:");
+}
 #endif // CHeaderStatement_h__

@@ -10,7 +10,7 @@ CClass::CClass(const CClass& node) :CNode(node)
 
 CClass::CClass(const std::string& name) : CNode(name)
 {
-  m_env.push_back(CEnvironment(name,class_t));
+  m_env.push_back(CEnvironment(name,class_e));
 }
 
 CClass& CClass::operator=(const CClass& node)

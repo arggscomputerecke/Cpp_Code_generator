@@ -4,6 +4,7 @@
 #include "code_gen/CNode.hh"
 
 
+
 class DllExport CClass :public CNode {
 public: 
   CClass(const std::string& name);
@@ -15,7 +16,9 @@ public:
 
 
   CClass& add(const CNode& t);
-  
+  inline CClass& operator<<(const CNode& n) {
+    return add(n);
+  }
 };
 
 #endif // CClass_h__

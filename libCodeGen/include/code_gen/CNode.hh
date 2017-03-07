@@ -24,6 +24,7 @@ public:
   const std::string& get_name() const;
   CNode& add_environment(const CEnvironment& env_);
 protected:
+  virtual void add_environment_internal(const CEnvironment& env_);
   std::vector<std::unique_ptr<CNode>> m_nodes;
   std::string m_name;
   env_list m_env;

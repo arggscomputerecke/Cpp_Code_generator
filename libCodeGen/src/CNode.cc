@@ -64,9 +64,15 @@ CNode& CNode::operator=(const CNode& node)
 
 CNode& CNode::add_environment(const CEnvironment& env_)
 {
+  add_environment_internal(env_);
   m_env.push_back(env_);
   for (auto& e:m_nodes){
     e->add_environment(env_);
   }
   return *this;
+}
+
+void CNode::add_environment_internal(const CEnvironment& env_)
+{
+
 }
