@@ -20,13 +20,18 @@ CClass& CClass::operator=(const CClass& node)
   return *this;
 }
 
-std::string CClass::toString(int indentation ) const
+
+
+void CClass::getDefinition(std::ostream& out, int indentation /*= 0*/) const
 {
-  std::string ret;
-  ret += std::string(indentation, ' ') + "class " + get_name() + "{\n";
-  ret += CNode::toString(indentation + 2);
-  ret += std::string(indentation, ' ') + "};\n";
-  return ret;
+  out << std::string(indentation, ' ') + "class " + get_name() + "{\n";
+  CNode::getDefinition(out ,indentation + 2);
+  out << std::string(indentation, ' ') + "};\n";
+}
+
+void CClass::getDeclaration(std::ostream& out, int indentation /*= 0*/) const
+{
+  out << std::string(indentation, ' ') + "class " + get_name() + ";\n";
 }
 
 std::unique_ptr<CNode> CClass::copy() const

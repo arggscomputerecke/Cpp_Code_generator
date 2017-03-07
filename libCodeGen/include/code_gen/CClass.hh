@@ -9,7 +9,8 @@ public:
   CClass(const std::string& name);
   CClass(const CClass& node);
   CClass& operator=(const CClass&);
-  virtual std::string toString(int indentation = 0) const override;
+  virtual void getDefinition(std::ostream&, int indentation = 0) const override;
+  virtual void getDeclaration(std::ostream&, int  indentation = 0) const override;
   virtual std::unique_ptr<CNode> copy() const  override;
 
   

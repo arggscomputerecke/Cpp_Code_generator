@@ -1,26 +1,38 @@
 #include "code_gen/CNode.hh"
 
-std::string CNode::toString(int indentation /*= 0*/) const
+void CNode::getDefinition(std::ostream& out, int indentation) const
 {
-  std::string ret;
+  
   for (auto& e: m_nodes)
   {
-    ret += e->toString(indentation);
+    e->getDefinition(out,indentation);
   }
-  return ret;
+  
 }
 
-void CNode::add(std::unique_ptr<CNode> node_)
+void CNode::getDeclaration(std::ostream& out, int indentation /*= 0*/) const
 {
+  for (auto& e : m_nodes)
+  {
+    e->getDeclaration(out, indentation);
+  }
+
+}
+
+void CNode::addNode(std::unique_ptr<CNode> node_)
+{
+  for (auto&e :m_env){
+    node_->add_environment(e);
+  }
   m_nodes.push_back(std::move(node_));
 }
 
-void CNode::add(const CNode& node_)
+void CNode::addNode(const CNode& node_)
 {
-  add(node_.copy());
+  addNode(node_.copy());
 }
 
-CNode::CNode(const CNode& node) :m_name(node.m_name)
+CNode::CNode(const CNode& node) :m_name(node.m_name),m_env(node.m_env)
 {
   for (auto& e: node.m_nodes){
     m_nodes.push_back(e->copy());
@@ -50,3 +62,11 @@ CNode& CNode::operator=(const CNode& node)
   return *this;
 }
 
+CNode& CNode::add_environment(const CEnvironment& env_)
+{
+  m_env.push_back(env_);
+  for (auto& e:m_nodes){
+    e->add_environment(env_);
+  }
+  return *this;
+}
