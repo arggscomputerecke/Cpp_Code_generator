@@ -13,6 +13,8 @@ public:
   virtual void getDeclaration(std::ostream&, int  indentation = 0) const override;
   virtual std::unique_ptr<CNode> copy() const  override;
 
+
+  CClass& add(const CNode& t);
   
 };
 

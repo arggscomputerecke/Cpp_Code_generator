@@ -1,14 +1,14 @@
 #include "code_gen/CFunction.hh"
 #include "code_gen/Internal/helpers.hh"
 
-CFunction::CFunction(const std::string& name) :CNode(name),m_return_type("void")
+CFunction::CFunction(const std::string& name):CAbstractFunction(name)
 {
-  m_env.push_back(CEnvironment(name, Funct_t));
+ 
 }
 
-CFunction::CFunction(const std::string& return_type, const std::string& name,const arg_list& args):CNode(name),m_return_type(return_type),m_args(args)
+CFunction::CFunction(const std::string& return_type, const std::string& name,const arg_list& args):CAbstractFunction(return_type,name,args)
 {
-  m_env.push_back(CEnvironment(name, Funct_t));
+
 }
 
 
@@ -66,3 +66,11 @@ CFunction& CFunction::addStatement(const std::string& statement_)
 }
 
 
+CAbstractFunction::CAbstractFunction(const std::string& name) :CAbstractFunction("void", name, {} ){
+  
+
+}
+CAbstractFunction::CAbstractFunction(const std::string& return_type, const std::string& name, const arg_list& args) : CNode(name), m_return_type(return_type), m_args(args)
+{
+  m_env.push_back(CEnvironment(name, Funct_t));
+}

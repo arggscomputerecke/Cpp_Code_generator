@@ -1,6 +1,9 @@
 #include <QtTest/QtTest>
+#include <QtCore/QDir>
+#include <QtWidgets/QPushButton>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 
 #include "testCodeGen/core.hh"
@@ -9,6 +12,7 @@
 #include "code_gen/CClass.hh"
 #include "code_gen/CFunction.hh"
 #include "code_gen/CNamespace.hh"
+#include "code_gen/CHeaderFunction.hh"
 
 void test_class_gen::test_constructor()
 {
@@ -16,8 +20,9 @@ void test_class_gen::test_constructor()
   CClass myClass("testClass");
 
   std::stringstream ss;
-  myClass.getDefinition(ss);
-  QCOMPARE(ss.str(), std::string("class testClass{\n};\n"));
+  myClass.getDeclaration(ss);
+  auto s = ss.str();
+  QCOMPARE(ss.str(), std::string("class testClass{\n} // end class: testClass\n"));
 }
 
 void test_class_gen::nested_classes()
@@ -25,8 +30,9 @@ void test_class_gen::nested_classes()
   CClass myClass("testClass");
   myClass.addNode(Unew CClass("subclass"));
   std::stringstream ss;
-  myClass.getDefinition(ss);
-  QCOMPARE(ss.str(), std::string("class testClass{\n  class subclass{\n  };\n};\n"));
+  myClass.getDeclaration(ss);
+  auto s = ss.str();
+  QCOMPARE(ss.str(), std::string("class testClass{\n  class subclass{\n  } // end class: subclass\n} // end class: testClass\n"));
 
 }
 
@@ -91,6 +97,62 @@ void test_class_gen::namespace_with_function()
   QCOMPARE(ss.str(), std::string("namespace myNamespace{\n  void  myFunc();\n} // end namespace: myNamespace\n"));
 }
 
+void test_class_gen::signal_create_function()
+{
+  
+
+  auto metaObject = QPushButton::staticMetaObject;
+
+  std::string className = "Signals_";
+  className += metaObject.className();
+
+  auto cl = CClass(className);
+
+
+  for (int i = 0; i < metaObject.methodCount(); i++) {
+    auto method = metaObject.method(i);
+
+    if (method.methodType() == QMetaMethod::Signal) {
+     auto methode_name = std::string(method.name());
+      std::string statement__ = "return make_signal_slot(m_object, &" + className + "::" + methode_name+ ");";
+      auto CF = CHeaderFunction("auto", methode_name, {}).addStatement(statement__);
+      cl.add(CF);
+    }
+  }
+
+  std::ofstream out("test.cc");
+  cl.getDeclaration(out);
+  cl.getDefinition(out);
+  
+
+  
+
+}
+
+void test_class_gen::class_with_member_functions()
+{
+  CNamespace myNamespace = CNamespace("myNamespace")
+    .add(CClass("MyClass")
+      .add(CFunction("myFunc"))
+    );
+  {
+    std::stringstream ss;
+    myNamespace.getDefinition(ss);
+    auto s = ss.str();
+    QCOMPARE(ss.str(), std::string("void  myNamespace::MyClass::myFunc() {\n}\n"));
+
+
+  }
+  {
+    std::stringstream ss;
+    myNamespace.getDeclaration(ss);
+    auto s = ss.str();
+    QCOMPARE(ss.str(), std::string("namespace myNamespace{\n  class MyClass{\n    void  myFunc();\n  } // end class: MyClass\n} // end namespace: myNamespace\n"));
+  }
+
+
+}
+
 void test_class_gen::namespace_with_function_and_body()
 {
   CNamespace myNamespace = CNamespace("myNamespace1")
@@ -111,6 +173,33 @@ void test_class_gen::namespace_with_function_and_body()
     myNamespace.getDefinition(ss);
     auto s = ss.str();
     QCOMPARE(ss.str(), std::string("void  myNamespace1::myNamespace2::myFunc() {\n  cout << \"hello world\" << endl;\n  return;\n}\n"));
+  }
+
+}
+
+void test_class_gen::namespace_with_multiple_function_and_body()
+{
+  CNamespace myNamespace = CNamespace("myNamespace1")
+    .add(CNamespace("myNamespace2")
+      .add(CFunction("myFunc")
+        .addStatement("cout << \"hello world\" << endl;")
+        .addStatement("return;")
+      )
+      .add(CFunction("int", "myFunc", { { "int", "myInt" },{ "std::string" , "myString" } })
+        .addStatement("return 1;")
+      )
+    );
+  {
+    std::stringstream ss;
+    myNamespace.getDeclaration(ss);
+    auto s = ss.str();
+    QCOMPARE(ss.str(), std::string("namespace myNamespace1{\n  namespace myNamespace2{\n    void  myFunc();\n    int  myFunc( int  myInt, std::string  myString);\n  } // end namespace: myNamespace2\n} // end namespace: myNamespace1\n"));
+  }
+  {
+    std::stringstream ss;
+    myNamespace.getDefinition(ss);
+    auto s = ss.str();
+    QCOMPARE(ss.str(), std::string("void  myNamespace1::myNamespace2::myFunc() {\n  cout << \"hello world\" << endl;\n  return;\n}\nint  myNamespace1::myNamespace2::myFunc( int  myInt, std::string  myString) {\n  return 1;\n}\n"));
   }
 
 }

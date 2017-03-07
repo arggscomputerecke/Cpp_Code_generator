@@ -5,12 +5,12 @@
 
 CClass::CClass(const CClass& node) :CNode(node)
 {
-
+  
 }
 
 CClass::CClass(const std::string& name) : CNode(name)
 {
-
+  m_env.push_back(CEnvironment(name,class_t));
 }
 
 CClass& CClass::operator=(const CClass& node)
@@ -24,17 +24,24 @@ CClass& CClass::operator=(const CClass& node)
 
 void CClass::getDefinition(std::ostream& out, int indentation /*= 0*/) const
 {
-  out << std::string(indentation, ' ') + "class " + get_name() + "{\n";
-  CNode::getDefinition(out ,indentation + 2);
-  out << std::string(indentation, ' ') + "};\n";
+  CNode::getDefinition(out, indentation);
 }
 
 void CClass::getDeclaration(std::ostream& out, int indentation /*= 0*/) const
 {
-  out << std::string(indentation, ' ') + "class " + get_name() + ";\n";
+  out << std::string(indentation, ' ') << "class " << m_env[0].m_name << "{\n";
+  CNode::getDeclaration(out, indentation + 2);
+  out << std::string(indentation, ' ') << "} // end class: " << m_env[0].m_name << "\n";
 }
 
 std::unique_ptr<CNode> CClass::copy() const
 {
   return Unew CClass(*this);
+}
+
+CClass& CClass::add(const CNode& t)
+{
+
+  CNode::addNode(t);
+  return *this;
 }

@@ -21,7 +21,11 @@ class test_class_gen :public QObject {
   Q_OBJECT
 
     private slots:
+
+  void signal_create_function();
+  void class_with_member_functions();
   void namespace_with_function_and_body();
+  void namespace_with_multiple_function_and_body();
   void test_constructor();
   void nested_classes();
   void functions();
