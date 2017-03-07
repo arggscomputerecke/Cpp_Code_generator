@@ -21,7 +21,8 @@ class test_class_gen :public QObject {
   Q_OBJECT
 
     private slots:
-
+  void headerStatements();
+  void templateFunction();
   void signal_create_function();
   void class_with_member_functions();
   void namespace_with_function_and_body();

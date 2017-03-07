@@ -13,6 +13,8 @@
 #include "code_gen/CFunction.hh"
 #include "code_gen/CNamespace.hh"
 #include "code_gen/CHeaderFunction.hh"
+#include "code_gen/CTemplateFunction.hh"
+#include "code_gen/CHeaderStatement.hh"
 
 void test_class_gen::test_constructor()
 {
@@ -97,6 +99,28 @@ void test_class_gen::namespace_with_function()
   QCOMPARE(ss.str(), std::string("namespace myNamespace{\n  void  myFunc();\n} // end namespace: myNamespace\n"));
 }
 
+void test_class_gen::headerStatements()
+{
+  auto myNamespace = CNamespace("myN").add(CHeaderStatement("int i =0;"));
+  std::stringstream ss;
+  myNamespace.getDeclaration(ss);
+  auto s = ss.str();
+  QCOMPARE(ss.str(), std::string("namespace myN{\n  int i =0;\n} // end namespace: myN\n"));
+}
+
+void test_class_gen::templateFunction()
+{
+  auto myNamespace = CNamespace("myN")
+    .add(CTemplateFunction({ { "typename","T" } }, "T", "myTemplateFunction", { { "T&&", "t" } })
+      .addStatement(" return t;")
+    );
+
+  std::stringstream ss;
+  myNamespace.getDeclaration(ss);
+  auto s = ss.str();
+  QCOMPARE(ss.str(), std::string("namespace myN{\n  template <typename  T>\n  T  myTemplateFunction( T&&  t){\n     return t;\n  }\n} // end namespace: myN\n"));
+}
+
 void test_class_gen::signal_create_function()
 {
   
@@ -108,25 +132,31 @@ void test_class_gen::signal_create_function()
 
   auto cl = CClass(className);
 
-
+  cl.add(CHeaderStatement("public:"));
+  cl.add(CHeaderStatement(className + "(" + std::string(metaObject.className()) +"* obj) :m_object(obj) {}"));
   for (int i = 0; i < metaObject.methodCount(); i++) {
     auto method = metaObject.method(i);
 
     if (method.methodType() == QMetaMethod::Signal) {
      auto methode_name = std::string(method.name());
-      std::string statement__ = "return make_signal_slot(m_object, &" + className + "::" + methode_name+ ");";
+      std::string statement__ = "return make_signal_slot(m_object, &" + std::string(metaObject.className()) + "::" + methode_name+ ");";
       auto CF = CHeaderFunction("auto", methode_name, {}).addStatement(statement__);
       cl.add(CF);
     }
   }
 
+  cl.add(CHeaderStatement("private:"))
+    .add(CHeaderStatement(std::string(metaObject.className()) + "* m_object;"));
   std::ofstream out("test.cc");
   cl.getDeclaration(out);
-  cl.getDefinition(out);
-  
 
-  
 
+  auto fun = CHeaderFunction(className, "_singals", { { std::string(metaObject.className()) + "*","obj" } })
+    .addStatement(std::string("return ") + className + "(obj);");
+  
+  fun.getDeclaration(out);
+
+ 
 }
 
 void test_class_gen::class_with_member_functions()
